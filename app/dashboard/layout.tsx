@@ -25,7 +25,6 @@ export default function DashboardLayout({
   const { user, profile, signOut, isLoading } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // If loading or no profile, show a loading state
   if (isLoading || !profile) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -37,7 +36,6 @@ export default function DashboardLayout({
     );
   }
 
-  // Navigation items based on user role
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', forRoles: ['client', 'designer', 'project_manager'] },
     { name: 'Mis Proyectos', href: '/projects', forRoles: ['client', 'designer', 'project_manager'] },
@@ -46,7 +44,6 @@ export default function DashboardLayout({
     { name: 'Usuarios', href: '/admin/users', forRoles: ['project_manager'] },
   ];
 
-  // Filter navigation items based on user role
   const filteredNavigation = navigation.filter(item => item.forRoles.includes(profile.role));
 
   const getInitials = (name: string) => {
@@ -64,7 +61,6 @@ export default function DashboardLayout({
 
   return (
     <div className="flex h-screen bg-gray-50">
-      {/* Sidebar - desktop */}
       <div className="hidden md:flex flex-col w-64 bg-white border-r">
         <div className="h-16 flex items-center justify-center border-b">
           <Link href="/dashboard" className="text-2xl font-bold text-gray-800">
@@ -98,7 +94,6 @@ export default function DashboardLayout({
         </div>
       </div>
 
-      {/* Mobile sidebar */}
       {isMobileMenuOpen && (
         <div className="fixed inset-0 z-40 md:hidden">
           <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={toggleMobileMenu}></div>
@@ -152,9 +147,7 @@ export default function DashboardLayout({
         </div>
       )}
 
-      {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Top header */}
         <header className="bg-white border-b h-16 flex items-center justify-between px-4 md:px-6">
           <button
             onClick={toggleMobileMenu}
@@ -219,7 +212,6 @@ export default function DashboardLayout({
           </div>
         </header>
 
-        {/* Main content area */}
         <main className="flex-1 overflow-y-auto bg-gray-50 p-4 md:p-6">
           {children}
         </main>
