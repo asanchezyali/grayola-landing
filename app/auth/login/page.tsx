@@ -1,4 +1,3 @@
-// app/auth/login/page.tsx
 'use client';
 
 import { useState } from 'react';
@@ -39,7 +38,6 @@ export default function LoginPage() {
       <div className="px-4 py-12 mx-auto max-w-md w-full">
         <div className="flex justify-center mb-8">
           <div className="relative w-40 h-16">
-            {/* Replace with your actual logo */}
             <div className="text-3xl font-bold text-gray-800">Grayola</div>
           </div>
         </div>
