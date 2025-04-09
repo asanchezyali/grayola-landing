@@ -19,7 +19,6 @@ export function ProjectComments({
 }: ProjectCommentsProps) {
   const [newComment, setNewComment] = useState('');
 
-  // Get initials from name for avatar fallback
   const getInitials = (name: string) => {
     return name
       .split(' ')
