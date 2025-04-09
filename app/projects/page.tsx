@@ -1,4 +1,3 @@
-// app/projects/page.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -37,14 +36,12 @@ export default function ProjectsPage() {
           designers:designer_id(full_name)
         `);
 
-        // Filter projects based on user role
         if (profile?.role === 'client') {
           query = query.eq('client_id', profile.id);
         } else if (profile?.role === 'designer') {
           query = query.eq('designer_id', profile.id);
         }
 
-        // Order by created date, newest first
         query = query.order('created_at', { ascending: false });
 
         const { data, error } = await query;
@@ -53,7 +50,6 @@ export default function ProjectsPage() {
           throw error;
         }
 
-        // Process data to extract nested objects
         const processedData = data.map(project => {
           return {
             ...project,
@@ -76,11 +72,9 @@ export default function ProjectsPage() {
     }
   }, [profile]);
 
-  // Apply filters when search term or status filter changes
   useEffect(() => {
     let filtered = [...projects];
     
-    // Apply search filter
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(project => 
@@ -89,7 +83,6 @@ export default function ProjectsPage() {
       );
     }
     
-    // Apply status filter
     if (statusFilter !== 'all') {
       filtered = filtered.filter(project => project.status === statusFilter);
     }
@@ -97,7 +90,6 @@ export default function ProjectsPage() {
     setFilteredProjects(filtered);
   }, [searchTerm, statusFilter, projects]);
 
-  // Status badge color mapping
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'pending':
