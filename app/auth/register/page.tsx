@@ -1,4 +1,3 @@
-// app/auth/register/page.tsx
 'use client';
 
 import { useState } from 'react';
@@ -30,7 +29,6 @@ export default function RegisterPage() {
     setSuccess(null);
     setIsLoading(true);
 
-    // Validate inputs
     if (password !== confirmPassword) {
       setError('Las contraseñas no coinciden');
       setIsLoading(false);
@@ -47,13 +45,11 @@ export default function RegisterPage() {
       await signUp(email, password, fullName, role);
       setSuccess('Registro exitoso. Por favor revisa tu correo para confirmar tu cuenta.');
       
-      // Clear form
       setFullName('');
       setEmail('');
       setPassword('');
       setConfirmPassword('');
       
-      // Redirect to login or another page after a delay
       setTimeout(() => {
         router.push('/auth/login');
       }, 3000);
@@ -69,7 +65,6 @@ export default function RegisterPage() {
       <div className="px-4 py-12 mx-auto max-w-md w-full">
         <div className="flex justify-center mb-8">
           <div className="relative w-40 h-16">
-            {/* Replace with your actual logo */}
             <div className="text-3xl font-bold text-gray-800">Grayola</div>
           </div>
         </div>
