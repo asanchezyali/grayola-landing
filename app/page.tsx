@@ -8,13 +8,13 @@ import { useAuth } from '@/app/providers/supabase-auth-provider';
 import { Button } from '@/components/ui/button';
 
 export default function HomePage() {
-  const { isLoading, session, user } = useAuth();
+  const { profile, isLoading, session, user } = useAuth();
   const [isRedirecting, setIsRedirecting] = useState(false);
   const router = useRouter();
 
   // Console logs for debugging
   console.log('User:', user);
-  console.log('Profile:', user);
+  console.log('Profile:', profile);
   console.log('Session:', session?.user?.email); // Only log email for privacy
   console.log('Loading:', isLoading);
 
