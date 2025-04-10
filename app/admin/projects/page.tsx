@@ -1,30 +1,17 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { useAuth } from '@/app/providers/supabase-auth-provider';
-import { supabase, Project } from '@/app/lib/supabase';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ProjectStatusBadge } from '@/app/components/projects/ProjectStatusBadge';
-import { useToast } from '@/components/ui/use-toast';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useAuth } from "@/app/providers/supabase-auth-provider";
+import { supabase, Project } from "@/lib/supabase";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ProjectStatusBadge } from "@/components/projects/ProjectStatusBadge";
+import { useToast } from "@/app/providers/toast-provider";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -32,10 +19,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 
-type ProjectWithNames = Project & { 
+type ProjectWithNames = Project & {
   client_name: string;
   designer_name?: string;
 };
@@ -43,22 +29,22 @@ type ProjectWithNames = Project & {
 export default function AdminProjectsPage() {
   const { profile } = useAuth();
   const router = useRouter();
-  const { toast } = useToast();
+  const { showToast } = useToast();
 
   const [projects, setProjects] = useState<ProjectWithNames[]>([]);
   const [filteredProjects, setFilteredProjects] = useState<ProjectWithNames[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+
   const [projectToDelete, setProjectToDelete] = useState<ProjectWithNames | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
-    if (profile && profile.role !== 'project_manager') {
-      router.push('/dashboard');
+    if (profile && profile.role !== "project_manager") {
+      router.push("/dashboard");
       return;
     }
 
@@ -67,27 +53,30 @@ export default function AdminProjectsPage() {
         setIsLoading(true);
 
         const { data, error } = await supabase
-          .from('projects')
-          .select(`
+          .from("projects")
+          .select(
+            `
             *,
             client:client_id(id, full_name),
             designer:designer_id(id, full_name)
-          `)
-          .order('created_at', { ascending: false });
+          `
+          )
+          .order("created_at", { ascending: false });
 
         if (error) throw error;
 
-        const processedData = data.map(project => ({
+        const processedData = data.map((project) => ({
           ...project,
-          client_name: project.client?.full_name || 'Usuario desconocido',
-          designer_name: project.designer?.full_name
+          client_name: project.client?.full_name || "Usuario desconocido",
+          designer_name: project.designer?.full_name,
         }));
 
         setProjects(processedData);
         setFilteredProjects(processedData);
-      } catch (error: any) {
-        console.error('Error fetching projects:', error);
-        setError(error.message);
+      } catch (error: Error | unknown) {
+        const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+        console.error('Error message:', errorMessage);
+        setError(errorMessage);
       } finally {
         setIsLoading(false);
       }
@@ -100,68 +89,57 @@ export default function AdminProjectsPage() {
 
   useEffect(() => {
     let filtered = [...projects];
-    
+
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(project => 
-        project.title.toLowerCase().includes(term) || 
-        project.client_name.toLowerCase().includes(term) ||
-        (project.designer_name && project.designer_name.toLowerCase().includes(term))
+      filtered = filtered.filter(
+        (project) =>
+          project.title.toLowerCase().includes(term) ||
+          project.client_name.toLowerCase().includes(term) ||
+          (project.designer_name && project.designer_name.toLowerCase().includes(term))
       );
     }
-    
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter(project => project.status === statusFilter);
+
+    if (statusFilter !== "all") {
+      filtered = filtered.filter((project) => project.status === statusFilter);
     }
-    
+
     setFilteredProjects(filtered);
   }, [searchTerm, statusFilter, projects]);
 
   const handleDeleteProject = async () => {
     if (!projectToDelete) return;
-    
+
     setIsDeleting(true);
-    
+
     try {
       const { data: projectFiles, error: filesError } = await supabase
-        .from('project_files')
-        .select('file_path')
-        .eq('project_id', projectToDelete.id);
-      
+        .from("project_files")
+        .select("file_path")
+        .eq("project_id", projectToDelete.id);
+
       if (filesError) throw filesError;
-      
+
       if (projectFiles && projectFiles.length > 0) {
-        const filePaths = projectFiles.map(file => file.file_path);
-        
-        const { error: storageError } = await supabase.storage
-          .from('project-files')
-          .remove(filePaths);
-        
+        const filePaths = projectFiles.map((file) => file.file_path);
+
+        const { error: storageError } = await supabase.storage.from("project-files").remove(filePaths);
+
         if (storageError) {
-          console.error('Error al eliminar archivos del storage:', storageError);
+          console.error("Error al eliminar archivos del storage:", storageError);
         }
       }
-      
-      const { error: deleteError } = await supabase
-        .from('projects')
-        .delete()
-        .eq('id', projectToDelete.id);
-      
+
+      const { error: deleteError } = await supabase.from("projects").delete().eq("id", projectToDelete.id);
+
       if (deleteError) throw deleteError;
-      
-      setProjects(projects.filter(p => p.id !== projectToDelete.id));
-      
-      toast({
-        title: 'Proyecto eliminado',
-        description: 'El proyecto ha sido eliminado correctamente',
-      });
-      
-    } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: `No se pudo eliminar el proyecto: ${error.message}`,
-        variant: 'destructive',
-      });
+
+      setProjects(projects.filter((p) => p.id !== projectToDelete.id));
+
+      showToast("El proyecto ha sido eliminado correctamente", "success");
+    } catch (error: Error | unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      showToast(`No se pudo eliminar el proyecto: ${errorMessage}`, "error");
     } finally {
       setIsDeleting(false);
       setProjectToDelete(null);
@@ -169,7 +147,7 @@ export default function AdminProjectsPage() {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es');
+    return new Date(dateString).toLocaleDateString("es");
   };
 
   if (!profile) {
@@ -188,18 +166,14 @@ export default function AdminProjectsPage() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Administración de Proyectos</h1>
-          <p className="text-gray-500">
-            Gestiona todos los proyectos de diseño
-          </p>
+          <p className="text-gray-500">Gestiona todos los proyectos de diseño</p>
         </div>
       </div>
 
       <Card className="mb-6">
         <CardHeader>
           <CardTitle>Filtros</CardTitle>
-          <CardDescription>
-            Busca y filtra proyectos
-          </CardDescription>
+          <CardDescription>Busca y filtra proyectos</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col md:flex-row gap-4">
@@ -211,10 +185,7 @@ export default function AdminProjectsPage() {
               />
             </div>
             <div className="w-full md:w-48">
-              <Select
-                value={statusFilter}
-                onValueChange={setStatusFilter}
-              >
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger>
                   <SelectValue placeholder="Filtrar por estado" />
                 </SelectTrigger>
@@ -246,11 +217,7 @@ export default function AdminProjectsPage() {
           <CardContent className="p-6">
             <div className="text-center py-4">
               <p className="text-red-500">Error al cargar proyectos: {error}</p>
-              <Button 
-                variant="outline" 
-                className="mt-4" 
-                onClick={() => window.location.reload()}
-              >
+              <Button variant="outline" className="mt-4" onClick={() => window.location.reload()}>
                 Reintentar
               </Button>
             </div>
@@ -280,9 +247,7 @@ export default function AdminProjectsPage() {
                 ) : (
                   filteredProjects.map((project) => (
                     <TableRow key={project.id}>
-                      <TableCell className="font-medium truncate max-w-xs">
-                        {project.title}
-                      </TableCell>
+                      <TableCell className="font-medium truncate max-w-xs">{project.title}</TableCell>
                       <TableCell>{project.client_name}</TableCell>
                       <TableCell>
                         {project.designer_name || <span className="text-gray-400">Sin asignar</span>}
@@ -292,29 +257,13 @@ export default function AdminProjectsPage() {
                       </TableCell>
                       <TableCell>{formatDate(project.created_at)}</TableCell>
                       <TableCell className="text-right space-x-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          asChild
-                        >
-                          <Link href={`/projects/${project.id}`}>
-                            Ver
-                          </Link>
+                        <Button variant="outline" size="sm" asChild>
+                          <Link href={`/projects/${project.id}`}>Ver</Link>
                         </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          asChild
-                        >
-                          <Link href={`/admin/projects/${project.id}/edit`}>
-                            Editar
-                          </Link>
+                        <Button variant="outline" size="sm" asChild>
+                          <Link href={`/admin/projects/${project.id}/edit`}>Editar</Link>
                         </Button>
-                        <Button 
-                          variant="destructive" 
-                          size="sm"
-                          onClick={() => setProjectToDelete(project)}
-                        >
+                        <Button variant="destructive" size="sm" onClick={() => setProjectToDelete(project)}>
                           Eliminar
                         </Button>
                       </TableCell>
@@ -327,8 +276,8 @@ export default function AdminProjectsPage() {
         </Card>
       )}
 
-      <Dialog 
-        open={!!projectToDelete} 
+      <Dialog
+        open={!!projectToDelete}
         onOpenChange={(open) => {
           if (!open) setProjectToDelete(null);
         }}
@@ -338,24 +287,17 @@ export default function AdminProjectsPage() {
             <DialogTitle>Confirmar eliminación</DialogTitle>
             <DialogDescription>
               ¿Estás seguro de que deseas eliminar el proyecto <strong>{projectToDelete?.title}</strong>?
-              <br /><br />
+              <br />
+              <br />
               Esta acción es irreversible y eliminará todos los archivos y comentarios asociados.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setProjectToDelete(null)}
-              disabled={isDeleting}
-            >
+            <Button variant="outline" onClick={() => setProjectToDelete(null)} disabled={isDeleting}>
               Cancelar
             </Button>
-            <Button
-              variant="destructive"
-              onClick={handleDeleteProject}
-              disabled={isDeleting}
-            >
-              {isDeleting ? 'Eliminando...' : 'Eliminar proyecto'}
+            <Button variant="destructive" onClick={handleDeleteProject} disabled={isDeleting}>
+              {isDeleting ? "Eliminando..." : "Eliminar proyecto"}
             </Button>
           </DialogFooter>
         </DialogContent>
