@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from "@/components/ui/badge";
 
 export default function DashboardPage() {
-  const { profile, isLoading } = useAuth();
+  const { isLoading, user} = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoadingProjects, setIsLoadingProjects] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -40,7 +40,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const fetchProjects = async () => {
-      if (isCheckingAuth || !profile) return;
+      if (isCheckingAuth || !user) return;
 
       try {
         setIsLoadingProjects(true);
