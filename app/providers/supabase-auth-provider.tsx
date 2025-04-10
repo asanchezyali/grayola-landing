@@ -1,17 +1,16 @@
-// app/providers/supabase-auth-provider.tsx
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
-import { supabase, Profile, getUserProfile } from '@/lib/supabase';
+import { supabase, Profile, UserRole } from '@/lib/supabase';
 
 type AuthContextType = {
   user: User | null;
   profile: Profile | null;
   session: Session | null;
   isLoading: boolean;
-  signUp: (email: string, password: string, fullName: string, role: string) => Promise<void>;
+  signUp: (email: string, password: string, fullName: string, role: UserRole) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
 };
@@ -29,49 +28,118 @@ export function SupabaseAuthProvider({
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const router = useRouter();
 
-  // Initial session check and setup auth change listener
-  useEffect(() => {
-    const getSession = async () => {
-      setIsLoading(true);
-      
-      // Get current session
-      const { data: { session }, error } = await supabase.auth.getSession();
+  // Helper function to fetch user profile
+  const fetchProfile = async (userId: string): Promise<Profile | null> => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
       
       if (error) {
-        console.error('Error getting session:', error);
-      } else if (session) {
-        setSession(session);
-        setUser(session.user);
-        
-        // Fetch user profile
-        const profile = await getUserProfile(session.user.id);
-        setProfile(profile);
+        console.error('Error fetching profile:', error);
+        // Si el perfil no existe, intentamos crearlo
+        if (error.code === 'PGRST116') {
+          return await createProfile(userId);
+        }
+        return null;
       }
       
-      setIsLoading(false);
-    };
+      return data as Profile;
+    } catch (error) {
+      console.error('Exception fetching profile:', error);
+      return null;
+    }
+  };
+  
+  // Create profile if it doesn't exist
+  const createProfile = async (userId: string): Promise<Profile | null> => {
+    try {
+      // Obtenemos los detalles del usuario para extraer metadata
+      const { data: userData } = await supabase.auth.getUser();
+      
+      if (!userData || !userData.user) return null;
+      
+      const metadata = userData.user.user_metadata;
+      
+      const profileData = {
+        id: userId,
+        full_name: metadata?.full_name || userData.user.email?.split('@')[0] || 'User',
+        role: (metadata?.role || 'client') as UserRole,
+        avatar_url: null
+      };
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .insert(profileData)
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Error creating profile:', error);
+        return null;
+      }
+      
+      return data as Profile;
+    } catch (error) {
+      console.error('Exception creating profile:', error);
+      return null;
+    }
+  };
 
-    getSession();
-
-    // Set up auth change listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+  useEffect(() => {
+    const initializeAuth = async () => {
+      setIsLoading(true);
+      
+      try {
+        // Obtener la sesión actual
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          throw error;
+        }
+        
         if (session) {
           setSession(session);
           setUser(session.user);
           
           // Fetch user profile
-          const profile = await getUserProfile(session.user.id);
-          setProfile(profile);
+          const profileData = await fetchProfile(session.user.id);
+          if (profileData) {
+            setProfile(profileData);
+          }
+        }
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initializeAuth();
+
+    // Configurar listener para cambios de autenticación
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth state changed:', event, !!session);
+        
+        if (session) {
+          setSession(session);
+          setUser(session.user);
+          
+          // Fetch user profile
+          const profileData = await fetchProfile(session.user.id);
+          if (profileData) {
+            setProfile(profileData);
+          }
         } else {
           setSession(null);
           setUser(null);
           setProfile(null);
         }
         
-        setIsLoading(false);
-        
-        // Force refresh to update server-side props
+        // Refresh necesario para actualizar la UI
         router.refresh();
       }
     );
@@ -86,10 +154,12 @@ export function SupabaseAuthProvider({
     email: string,
     password: string,
     fullName: string,
-    role: string
+    role: UserRole
   ) => {
     try {
-      const { error } = await supabase.auth.signUp({
+      console.log('Iniciando registro de usuario:', { email, fullName, role });
+      
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -99,12 +169,20 @@ export function SupabaseAuthProvider({
           },
         },
       });
-
-      if (error) {
-        throw error;
+  
+      if (error) throw error;
+      
+      console.log('Usuario creado exitosamente:', data.user?.id);
+      
+      if (data.user) {
+        // Crear perfil solo si el usuario fue creado exitosamente
+        const profileData = await createProfile(data.user.id);
+        if (profileData) {
+          setProfile(profileData);
+        }
       }
     } catch (error) {
-      console.error('Error signing up:', error);
+      console.error('Error en el registro:', error);
       throw error;
     }
   };
@@ -112,14 +190,30 @@ export function SupabaseAuthProvider({
   // Sign in function
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      console.log('Intentando iniciar sesión para:', email);
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) {
-        throw error;
+      if (error) throw error;
+      
+      console.log('Inicio de sesión exitoso para:', email);
+      
+      // Actualizar inmediatamente el estado para evitar problemas de sincronización
+      if (data.session) {
+        setSession(data.session);
+        setUser(data.user);
+        
+        // Cargar perfil de usuario
+        const profileData = await fetchProfile(data.user.id);
+        if (profileData) {
+          setProfile(profileData);
+        }
       }
+      
+      return data;
     } catch (error) {
       console.error('Error signing in:', error);
       throw error;
@@ -131,9 +225,12 @@ export function SupabaseAuthProvider({
     try {
       const { error } = await supabase.auth.signOut();
       
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
+      
+      // Limpiar estado
+      setSession(null);
+      setUser(null);
+      setProfile(null);
       
       router.push('/auth/login');
     } catch (error) {
@@ -159,7 +256,6 @@ export function SupabaseAuthProvider({
   );
 }
 
-// Custom hook to use the auth context
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/app/providers/supabase-auth-provider';
@@ -9,14 +9,26 @@ import { Button } from '@/components/ui/button';
 export default function HomePage() {
   const { profile, isLoading } = useAuth();
   const router = useRouter();
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   useEffect(() => {
-    if (profile && !isLoading) {
-      router.push('/dashboard');
+    // Evitar múltiples intentos de redirección
+    if (isRedirecting) return;
+    
+    // Solo intentar redireccionar cuando isLoading sea false y haya un perfil
+    if (!isLoading && profile) {
+      console.log('Usuario autenticado en la página de inicio, redirigiendo al dashboard');
+      setIsRedirecting(true);
+      
+      // Usar setTimeout para asegurarnos de que la redirección ocurra después de la actualización del estado
+      setTimeout(() => {
+        router.push('/dashboard');
+      }, 0);
     }
-  }, [profile, isLoading, router]);
+  }, [profile, isLoading, router, isRedirecting]);
 
-  if (isLoading) {
+  // Mostrar spinner mientras se carga la autenticación
+  if (isLoading || isRedirecting) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -131,50 +143,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section className="py-20 bg-gray-50">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-gray-900">Nuestros Clientes</h2>
-            <p className="mt-4 text-xl text-gray-600 max-w-3xl mx-auto">
-              Empresas reconocidas confían en Grayola para sus necesidades de diseño.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            <div className="bg-white p-6 rounded-lg border shadow-sm flex items-center justify-center h-32">
-              <div className="text-xl font-bold text-gray-700">Frubana</div>
-            </div>
-            <div className="bg-white p-6 rounded-lg border shadow-sm flex items-center justify-center h-32">
-              <div className="text-xl font-bold text-gray-700">Rockstart</div>
-            </div>
-            <div className="bg-white p-6 rounded-lg border shadow-sm flex items-center justify-center h-32">
-              <div className="text-xl font-bold text-gray-700">Universidad Ean</div>
-            </div>
-            <div className="bg-white p-6 rounded-lg border shadow-sm flex items-center justify-center h-32">
-              <div className="text-xl font-bold text-gray-700">Y muchos más...</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-purple-500 to-blue-500 text-white">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold">¿Listo para transformar tu proceso de diseño?</h2>
-          <p className="mt-4 text-xl max-w-3xl mx-auto opacity-90">
-            Únete a Grayola hoy y comienza a gestionar tus proyectos de diseño de manera más eficiente.
-          </p>
-          <div className="mt-8">
-            <Button size="lg" variant="secondary" asChild>
-              <Link href="/auth/register">Empezar ahora</Link>
-            </Button>
-          </div>
-        </div>
-      </section>
-
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
+      <footer className="bg-gray-900 text-white py-12 mt-auto">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>

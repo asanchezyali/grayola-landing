@@ -371,7 +371,7 @@ export default function ProjectDetailsPage() {
           </CardHeader>
           <CardContent>
             <p>{error}</p>
-            <Button onClick={() => router.push("/projects")} className="mt-4">
+            <Button onClick={() => router.push("/dashboard/projects")} className="mt-4">
               Volver a proyectos
             </Button>
           </CardContent>
@@ -389,7 +389,7 @@ export default function ProjectDetailsPage() {
           </CardHeader>
           <CardContent>
             <p>El proyecto que estás buscando no existe o no tienes permisos para verlo.</p>
-            <Button onClick={() => router.push("/projects")} className="mt-4">
+            <Button onClick={() => router.push("/dashboard/projects")} className="mt-4">
               Volver a proyectos
             </Button>
           </CardContent>
