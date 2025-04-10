@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useAuth } from "../providers/supabase-auth-provider";
+import { useAuth } from "../../providers/supabase-auth-provider";
 import { supabase, Project } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -129,7 +129,7 @@ export default function ProjectsPage() {
         </div>
         {profile?.role === "client" && (
           <Button asChild className="mt-4 md:mt-0">
-            <Link href="/projects/new">Nuevo Proyecto</Link>
+            <Link href="/dashboard/projects/new">Nuevo Proyecto</Link>
           </Button>
         )}
       </div>
@@ -194,7 +194,7 @@ export default function ProjectsPage() {
               <p className="text-gray-500">No se encontraron proyectos.</p>
               {profile?.role === "client" && (
                 <Button variant="outline" asChild className="mt-2">
-                  <Link href="/projects/new">Crear nuevo proyecto</Link>
+                  <Link href="/dashboard/projects/new">Crear nuevo proyecto</Link>
                 </Button>
               )}
             </div>
@@ -205,7 +205,7 @@ export default function ProjectsPage() {
           {filteredProjects.map((project) => (
             <Card key={project.id} className="hover:bg-gray-50 transition-colors">
               <CardContent className="p-6">
-                <Link href={`/projects/${project.id}`} className="block">
+                <Link href={`/dashboard/projects/${project.id}`} className="block">
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between">
                     <div className="flex-1">
                       <h3 className="text-lg font-medium text-gray-900">{project.title}</h3>

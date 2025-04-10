@@ -1,3 +1,4 @@
+// app/page.tsx
 'use client';
 
 import { useEffect } from 'react';
@@ -10,6 +11,7 @@ export default function HomePage() {
   const { profile, isLoading } = useAuth();
   const router = useRouter();
 
+  // Redirigir a dashboard si ya está autenticado
   useEffect(() => {
     if (profile && !isLoading) {
       router.push('/dashboard');
@@ -29,6 +31,7 @@ export default function HomePage() {
 
   return (
     <div className="flex flex-col min-h-screen">
+      {/* Navbar */}
       <header className="sticky top-0 z-10 bg-white border-b">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">

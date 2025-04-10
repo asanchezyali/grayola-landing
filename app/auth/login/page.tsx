@@ -1,23 +1,30 @@
-"use client";
+// app/auth/login/page.tsx
+'use client';
 
-import { useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/app/providers/supabase-auth-provider";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/app/providers/supabase-auth-provider';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const { signIn } = useAuth();
+  const { signIn, profile, isLoading: authLoading } = useAuth();
   const router = useRouter();
+
+  // Si ya hay un usuario autenticado, redirigir al dashboard
+  useEffect(() => {
+    if (profile && !authLoading) {
+      router.push('/dashboard');
+    }
+  }, [profile, authLoading, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,11 +32,16 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
+      // Realizar el inicio de sesión
       await signIn(email, password);
-      router.push("/dashboard");
+      console.log('Inicio de sesión exitoso');
+      
+      // Esperar un momento para dar tiempo a que el estado se actualice
+      setTimeout(() => {
+        router.push('/dashboard');
+      }, 500);
     } catch (error: Error | unknown) {
-      const errorMessage = error instanceof Error ? error.message : "Failed to sign in. Please check your credentials.";
-      console.error("Error message:", errorMessage);
+      const errorMessage = error instanceof Error ? error.message : 'Error durante el inicio de sesión';
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -41,6 +53,7 @@ export default function LoginPage() {
       <div className="px-4 py-12 mx-auto max-w-md w-full">
         <div className="flex justify-center mb-8">
           <div className="relative w-40 h-16">
+            {/* Replace with your actual logo */}
             <div className="text-3xl font-bold text-gray-800">Grayola</div>
           </div>
         </div>
@@ -73,7 +86,10 @@ export default function LoginPage() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password">Contraseña</Label>
-                  <Link href="/auth/forgot-password" className="text-xs text-blue-600 hover:text-blue-800">
+                  <Link 
+                    href="/auth/forgot-password"
+                    className="text-xs text-blue-600 hover:text-blue-800"
+                  >
                     ¿Olvidaste tu contraseña?
                   </Link>
                 </div>
@@ -86,15 +102,22 @@ export default function LoginPage() {
                   required
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Iniciando sesión..." : "Iniciar sesión"}
+              <Button 
+                type="submit" 
+                className="w-full"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Iniciando sesión...' : 'Iniciar sesión'}
               </Button>
             </form>
           </CardContent>
           <CardFooter className="flex justify-center">
             <p className="text-sm text-gray-600">
-              ¿No tienes una cuenta?{" "}
-              <Link href="/auth/register" className="text-blue-600 hover:text-blue-800">
+              ¿No tienes una cuenta?{' '}
+              <Link 
+                href="/auth/register" 
+                className="text-blue-600 hover:text-blue-800"
+              >
                 Regístrate
               </Link>
             </p>

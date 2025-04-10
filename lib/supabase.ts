@@ -1,4 +1,3 @@
-// app/lib/supabase.ts
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
@@ -10,7 +9,6 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Types for our Supabase tables
 export type UserRole = 'client' | 'designer' | 'project_manager';
 
 export interface Profile {
