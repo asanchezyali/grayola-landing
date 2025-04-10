@@ -40,9 +40,9 @@ export default function LoginPage() {
       setTimeout(() => {
         router.push('/dashboard');
       }, 500);
-    } catch (error: any) {
-      console.error('Error de inicio de sesión:', error);
-      setError(error.message || 'Error al iniciar sesión. Por favor verifica tus credenciales.');
+    } catch (error: Error | unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Error durante el inicio de sesión';
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }

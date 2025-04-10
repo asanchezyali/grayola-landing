@@ -1,13 +1,13 @@
 // app/dashboard/page.tsx
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { useAuth } from '../providers/supabase-auth-provider';
-import { supabase, Project } from '@/lib/supabase';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useAuth } from "../providers/supabase-auth-provider";
+import { supabase, Project } from "@/lib/supabase";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 export default function DashboardPage() {
   const { profile, isLoading } = useAuth();
@@ -22,41 +22,41 @@ export default function DashboardPage() {
       try {
         const { data } = await supabase.auth.getSession();
         if (!data.session) {
-          console.log('No hay sesión activa en Dashboard, redirigiendo a login');
-          window.location.href = '/auth/login';
+          console.log("No hay sesión activa en Dashboard, redirigiendo a login");
+          window.location.href = "/auth/login";
           return;
         }
-        
-        console.log('Sesión verificada en Dashboard:', data.session.user.email);
+
+        console.log("Sesión verificada en Dashboard:", data.session.user.email);
         setIsCheckingAuth(false);
       } catch (error) {
-        console.error('Error verificando autenticación en Dashboard:', error);
-        window.location.href = '/auth/login';
+        console.error("Error verificando autenticación en Dashboard:", error);
+        window.location.href = "/auth/login";
       }
     };
-    
+
     checkAuth();
   }, []);
 
   useEffect(() => {
     const fetchProjects = async () => {
       if (isCheckingAuth || !profile) return;
-      
+
       try {
         setIsLoadingProjects(true);
-        console.log('Cargando proyectos para el usuario:', profile.id);
+        console.log("Cargando proyectos para el usuario:", profile.id);
 
-        let query = supabase.from('projects').select('*');
+        let query = supabase.from("projects").select("*");
 
         // Filter projects based on user role
-        if (profile.role === 'client') {
-          query = query.eq('client_id', profile.id);
-        } else if (profile.role === 'designer') {
-          query = query.eq('designer_id', profile.id);
+        if (profile.role === "client") {
+          query = query.eq("client_id", profile.id);
+        } else if (profile.role === "designer") {
+          query = query.eq("designer_id", profile.id);
         }
 
         // Limit to 5 most recent projects for the dashboard
-        query = query.order('created_at', { ascending: false }).limit(5);
+        query = query.order("created_at", { ascending: false }).limit(5);
 
         const { data, error } = await query;
 
@@ -64,11 +64,11 @@ export default function DashboardPage() {
           throw error;
         }
 
-        console.log('Proyectos cargados:', data?.length || 0);
-        setProjects(data as Project[] || []);
-      } catch (error: any) {
-        console.error('Error cargando proyectos:', error);
-        setError(error.message);
+        console.log("Proyectos cargados:", data?.length || 0);
+        setProjects((data as Project[]) || []);
+      } catch (error: Error | unknown) {
+        const errorMessage = error instanceof Error ? error.message : "Error al cargar proyectos";
+        setError(errorMessage);
       } finally {
         setIsLoadingProjects(false);
       }
@@ -80,14 +80,30 @@ export default function DashboardPage() {
   // Status badge color mapping
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'pending':
-        return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">Pendiente</Badge>;
-      case 'in_progress':
-        return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">En progreso</Badge>;
-      case 'completed':
-        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Completado</Badge>;
-      case 'cancelled':
-        return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">Cancelado</Badge>;
+      case "pending":
+        return (
+          <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+            Pendiente
+          </Badge>
+        );
+      case "in_progress":
+        return (
+          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+            En progreso
+          </Badge>
+        );
+      case "completed":
+        return (
+          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+            Completado
+          </Badge>
+        );
+      case "cancelled":
+        return (
+          <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+            Cancelado
+          </Badge>
+        );
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -113,10 +129,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <p>No se pudo verificar tu sesión. Por favor, inicia sesión nuevamente.</p>
-            <Button 
-              onClick={() => window.location.href = '/auth/login'} 
-              className="mt-4"
-            >
+            <Button onClick={() => (window.location.href = "/auth/login")} className="mt-4">
               Iniciar sesión
             </Button>
           </CardContent>
@@ -130,11 +143,9 @@ export default function DashboardPage() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Bienvenido, {profile.full_name}</h1>
-          <p className="text-gray-500">
-            Aquí puede ver un resumen de sus proyectos y actividades recientes.
-          </p>
+          <p className="text-gray-500">Aquí puede ver un resumen de sus proyectos y actividades recientes.</p>
         </div>
-        {profile.role === 'client' && (
+        {profile.role === "client" && (
           <Button asChild className="mt-4 md:mt-0">
             <Link href="/dashboard/projects/new">Nuevo Proyecto</Link>
           </Button>
@@ -145,9 +156,7 @@ export default function DashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle>Proyectos Recientes</CardTitle>
-            <CardDescription>
-              Los {projects.length} proyectos más recientes
-            </CardDescription>
+            <CardDescription>Los {projects.length} proyectos más recientes</CardDescription>
           </CardHeader>
           <CardContent>
             {isLoadingProjects ? (
@@ -163,7 +172,7 @@ export default function DashboardPage() {
             ) : projects.length === 0 ? (
               <div className="text-center py-4">
                 <p className="text-gray-500">No hay proyectos disponibles.</p>
-                {profile.role === 'client' && (
+                {profile.role === "client" && (
                   <Button variant="outline" asChild className="mt-2">
                     <Link href="/dashboard/projects/new">Crear nuevo proyecto</Link>
                   </Button>
@@ -178,13 +187,13 @@ export default function DashboardPage() {
                         <div>
                           <h3 className="font-medium text-gray-900">{project.title}</h3>
                           <p className="text-sm text-gray-500 mt-1 line-clamp-1">
-                            {project.description || 'Sin descripción'}
+                            {project.description || "Sin descripción"}
                           </p>
                         </div>
                         <div>{getStatusBadge(project.status)}</div>
                       </div>
                       <div className="text-xs text-gray-500 mt-2">
-                        Creado: {new Date(project.created_at).toLocaleDateString('es')}
+                        Creado: {new Date(project.created_at).toLocaleDateString("es")}
                       </div>
                     </Link>
                   </div>
@@ -202,9 +211,7 @@ export default function DashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle>Resumen de Actividad</CardTitle>
-            <CardDescription>
-              Estado actual de tus proyectos
-            </CardDescription>
+            <CardDescription>Estado actual de tus proyectos</CardDescription>
           </CardHeader>
           <CardContent>
             {isLoadingProjects ? (
@@ -225,21 +232,15 @@ export default function DashboardPage() {
                 </div>
                 <div className="flex justify-between items-center p-3 bg-yellow-50 rounded-lg">
                   <span className="text-yellow-700 font-medium">Pendientes</span>
-                  <span className="font-bold text-lg">
-                    {projects.filter(p => p.status === 'pending').length}
-                  </span>
+                  <span className="font-bold text-lg">{projects.filter((p) => p.status === "pending").length}</span>
                 </div>
                 <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
                   <span className="text-blue-700 font-medium">En progreso</span>
-                  <span className="font-bold text-lg">
-                    {projects.filter(p => p.status === 'in_progress').length}
-                  </span>
+                  <span className="font-bold text-lg">{projects.filter((p) => p.status === "in_progress").length}</span>
                 </div>
                 <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
                   <span className="text-green-700 font-medium">Completados</span>
-                  <span className="font-bold text-lg">
-                    {projects.filter(p => p.status === 'completed').length}
-                  </span>
+                  <span className="font-bold text-lg">{projects.filter((p) => p.status === "completed").length}</span>
                 </div>
               </div>
             )}
@@ -247,30 +248,28 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {profile.role === 'project_manager' && (
+      {profile.role === "project_manager" && (
         <Card className="mt-6">
           <CardHeader>
             <CardTitle>Acciones rápidas</CardTitle>
-            <CardDescription>
-              Herramientas para gestionar proyectos y usuarios
-            </CardDescription>
+            <CardDescription>Herramientas para gestionar proyectos y usuarios</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               <Button variant="outline" asChild className="h-auto py-6 flex flex-col justify-center">
-                <Link href="/admin/projects">
+                <Link href="/dashboard/gestion">
                   <span className="text-lg font-medium mb-1">Gestionar Proyectos</span>
                   <span className="text-sm text-gray-500">Ver y editar todos los proyectos</span>
                 </Link>
               </Button>
               <Button variant="outline" asChild className="h-auto py-6 flex flex-col justify-center">
-                <Link href="/admin/users">
+                <Link href="/dashboard/users">
                   <span className="text-lg font-medium mb-1">Gestionar Usuarios</span>
                   <span className="text-sm text-gray-500">Administrar diseñadores y clientes</span>
                 </Link>
               </Button>
               <Button variant="outline" asChild className="h-auto py-6 flex flex-col justify-center">
-                <Link href="/admin/assign">
+                <Link href="/dashboard/assign">
                   <span className="text-lg font-medium mb-1">Asignar Proyectos</span>
                   <span className="text-sm text-gray-500">Asignar diseñadores a proyectos</span>
                 </Link>
