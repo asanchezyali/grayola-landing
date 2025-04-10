@@ -1,22 +1,22 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/app/providers/supabase-auth-provider';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/app/providers/supabase-auth-provider";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function RegisterPage() {
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [role, setRole] = useState('client');
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [role, setRole] = useState("client");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -30,31 +30,34 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     if (password !== confirmPassword) {
-      setError('Las contraseñas no coinciden');
+      setError("Las contraseñas no coinciden");
       setIsLoading(false);
       return;
     }
 
     if (password.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres');
+      setError("La contraseña debe tener al menos 6 caracteres");
       setIsLoading(false);
       return;
     }
 
     try {
       await signUp(email, password, fullName, role);
-      setSuccess('Registro exitoso. Por favor revisa tu correo para confirmar tu cuenta.');
-      
-      setFullName('');
-      setEmail('');
-      setPassword('');
-      setConfirmPassword('');
-      
+      setSuccess("Registro exitoso. Por favor revisa tu correo para confirmar tu cuenta.");
+
+      setFullName("");
+      setEmail("");
+      setPassword("");
+      setConfirmPassword("");
+
       setTimeout(() => {
-        router.push('/auth/login');
+        router.push("/auth/login");
       }, 3000);
-    } catch (error: any) {
-      setError(error.message || 'No se pudo completar el registro. Por favor intenta nuevamente.');
+    } catch (error: Error | unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : "No se pudo completar el registro. Por favor intenta nuevamente.";
+      console.error("Error message:", errorMessage);
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -83,7 +86,7 @@ export default function RegisterPage() {
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
-              
+
               {success && (
                 <Alert className="bg-green-50 border-green-300 text-green-800">
                   <AlertDescription>{success}</AlertDescription>
@@ -101,7 +104,7 @@ export default function RegisterPage() {
                   required
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="email">Correo electrónico</Label>
                 <Input
@@ -113,13 +116,10 @@ export default function RegisterPage() {
                   required
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="role">Tipo de usuario</Label>
-                <Select
-                  value={role}
-                  onValueChange={setRole}
-                >
+                <Select value={role} onValueChange={setRole}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecciona un rol" />
                   </SelectTrigger>
@@ -133,7 +133,7 @@ export default function RegisterPage() {
                   Nota: Los roles de diseñador y project manager requieren aprobación adicional.
                 </p>
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="password">Contraseña</Label>
                 <Input
@@ -145,7 +145,7 @@ export default function RegisterPage() {
                   required
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">Confirmar contraseña</Label>
                 <Input
@@ -157,23 +157,16 @@ export default function RegisterPage() {
                   required
                 />
               </div>
-              
-              <Button 
-                type="submit" 
-                className="w-full"
-                disabled={isLoading}
-              >
-                {isLoading ? 'Registrando...' : 'Registrarse'}
+
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? "Registrando..." : "Registrarse"}
               </Button>
             </form>
           </CardContent>
           <CardFooter className="flex justify-center">
             <p className="text-sm text-gray-600">
-              ¿Ya tienes una cuenta?{' '}
-              <Link 
-                href="/auth/login" 
-                className="text-blue-600 hover:text-blue-800"
-              >
+              ¿Ya tienes una cuenta?{" "}
+              <Link href="/auth/login" className="text-blue-600 hover:text-blue-800">
                 Iniciar sesión
               </Link>
             </p>
