@@ -1,17 +1,30 @@
 // app/admin/users/page.tsx
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/app/providers/supabase-auth-provider";
-import { supabase, Profile, UserRole } from "@/app/lib/supabase";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/components/ui/use-toast";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/app/providers/supabase-auth-provider';
+import { supabase, Profile, UserRole } from '@/lib/supabase';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useToast } from '@/app/providers/toast-provider';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -20,10 +33,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from '@/components/ui/badge';
 
 // Tipo extendido para la información del usuario
-type UserWithStats = Profile & {
+type UserWithStats = Profile & { 
   email: string;
   projects_count: number;
 };
@@ -31,17 +44,17 @@ type UserWithStats = Profile & {
 export default function AdminUsersPage() {
   const { profile } = useAuth();
   const router = useRouter();
-  const { toast } = useToast();
+  const { showToast } = useToast();
 
   const [users, setUsers] = useState<UserWithStats[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<UserWithStats[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
+  
   // Estados para filtros
-  const [searchTerm, setSearchTerm] = useState("");
-  const [roleFilter, setRoleFilter] = useState("all");
-
+  const [searchTerm, setSearchTerm] = useState('');
+  const [roleFilter, setRoleFilter] = useState('all');
+  
   // Estado para el diálogo de edición de rol
   const [userToEdit, setUserToEdit] = useState<UserWithStats | null>(null);
   const [newRole, setNewRole] = useState<UserRole | null>(null);
@@ -49,8 +62,8 @@ export default function AdminUsersPage() {
 
   useEffect(() => {
     // Verificar si el usuario es project manager
-    if (profile && profile.role !== "project_manager") {
-      router.push("/dashboard");
+    if (profile && profile.role !== 'project_manager') {
+      router.push('/dashboard');
       return;
     }
 
@@ -60,9 +73,9 @@ export default function AdminUsersPage() {
 
         // Primero obtenemos todos los usuarios de 'profiles'
         const { data: profilesData, error: profilesError } = await supabase
-          .from("profiles")
-          .select("*")
-          .order("created_at", { ascending: false });
+          .from('profiles')
+          .select('*')
+          .order('created_at', { ascending: false });
 
         if (profilesError) throw profilesError;
 
@@ -73,68 +86,60 @@ export default function AdminUsersPage() {
         }
 
         // Obtener emails de los usuarios
-        const userIds = profilesData.map((profile) => profile.id);
-
-        // Usamos RPC (Remote Procedure Call) para obtener emails con el service role
+        // (Esto es simplificado, ya que el email podría obtenerse de otra manera)
         const { data: usersData, error: usersError } = await supabase.auth.admin.listUsers();
 
-        if (usersError) {
-          console.error("No se pudieron obtener los correos de los usuarios:", usersError);
-          // Continuamos sin los emails
+        // Mapa de ID de usuario a email
+        const emailMap: Record<string, string> = {};
+        if (!usersError && usersData) {
+          usersData.users.forEach(user => {
+            emailMap[user.id] = user.email || 'Email no disponible';
+          });
         }
 
-        // Obtener conteos de proyectos para cada usuario
-        const { data: clientProjects, error: clientProjectsError } = await supabase
-          .from("projects")
-          .select("client_id, count")
-          .group("client_id");
+        // Obtener todos los proyectos para calcular conteos
+        const { data: allProjects, error: projectsError } = await supabase
+          .from('projects')
+          .select('*');
 
-        if (clientProjectsError) {
-          console.error("Error al obtener conteos de proyectos de clientes:", clientProjectsError);
+        if (projectsError) {
+          console.error('Error al obtener proyectos:', projectsError);
         }
 
-        const { data: designerProjects, error: designerProjectsError } = await supabase
-          .from("projects")
-          .select("designer_id, count")
-          .not("designer_id", "is", null)
-          .group("designer_id");
-
-        if (designerProjectsError) {
-          console.error("Error al obtener conteos de proyectos de diseñadores:", designerProjectsError);
-        }
-
-        // Crear un mapa de conteos de proyectos
+        // Calcular conteos de proyectos por cliente y diseñador
         const projectCounts: Record<string, number> = {};
-
-        clientProjects?.forEach((item) => {
-          projectCounts[item.client_id] = parseInt(item.count);
-        });
-
-        designerProjects?.forEach((item) => {
-          if (projectCounts[item.designer_id]) {
-            projectCounts[item.designer_id] += parseInt(item.count);
-          } else {
-            projectCounts[item.designer_id] = parseInt(item.count);
-          }
-        });
+        
+        if (allProjects) {
+          // Contar proyectos para clientes
+          allProjects.forEach(project => {
+            if (project.client_id) {
+              projectCounts[project.client_id] = (projectCounts[project.client_id] || 0) + 1;
+            }
+          });
+          
+          // Contar proyectos para diseñadores
+          allProjects.forEach(project => {
+            if (project.designer_id) {
+              projectCounts[project.designer_id] = (projectCounts[project.designer_id] || 0) + 1;
+            }
+          });
+        }
 
         // Combinar toda la información
-        const combinedData: UserWithStats[] = profilesData.map((profile) => {
-          // Buscar el email correspondiente
-          const userData = usersData?.users.find((user) => user.id === profile.id);
-
+        const combinedData: UserWithStats[] = profilesData.map(profile => {
           return {
             ...profile,
-            email: userData?.email || "Email no disponible",
-            projects_count: projectCounts[profile.id] || 0,
+            email: emailMap[profile.id] || 'Email no disponible',
+            projects_count: projectCounts[profile.id] || 0
           };
         });
 
         setUsers(combinedData);
         setFilteredUsers(combinedData);
-      } catch (error: any) {
-        console.error("Error fetching users:", error);
-        setError(error.message);
+      } catch (error) {
+        console.error('Error fetching users:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+        setError(errorMessage);
       } finally {
         setIsLoading(false);
       }
@@ -148,47 +153,49 @@ export default function AdminUsersPage() {
   // Aplicar filtros cuando cambian
   useEffect(() => {
     let filtered = [...users];
-
+    
     // Filtro de búsqueda
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(
-        (user) => user.full_name.toLowerCase().includes(term) || user.email.toLowerCase().includes(term)
+      filtered = filtered.filter(user => 
+        user.full_name.toLowerCase().includes(term) || 
+        user.email.toLowerCase().includes(term)
       );
     }
-
+    
     // Filtro de rol
-    if (roleFilter !== "all") {
-      filtered = filtered.filter((user) => user.role === roleFilter);
+    if (roleFilter !== 'all') {
+      filtered = filtered.filter(user => user.role === roleFilter);
     }
-
+    
     setFilteredUsers(filtered);
   }, [searchTerm, roleFilter, users]);
 
   // Función para actualizar el rol de un usuario
   const handleUpdateRole = async () => {
     if (!userToEdit || !newRole) return;
-
+    
     setIsUpdating(true);
-
+    
     try {
-      const { error } = await supabase.from("profiles").update({ role: newRole }).eq("id", userToEdit.id);
-
+      const { error } = await supabase
+        .from('profiles')
+        .update({ role: newRole })
+        .eq('id', userToEdit.id);
+      
       if (error) throw error;
-
+      
       // Actualizar estado local
-      setUsers(users.map((user) => (user.id === userToEdit.id ? { ...user, role: newRole } : user)));
-
-      toast({
-        title: "Rol actualizado",
-        description: `El rol de ${userToEdit.full_name} ha sido actualizado a ${getRoleName(newRole)}`,
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: `No se pudo actualizar el rol: ${error.message}`,
-        variant: "destructive",
-      });
+      setUsers(users.map(user => 
+        user.id === userToEdit.id ? { ...user, role: newRole } : user
+      ));
+      
+      showToast(`El rol de ${userToEdit.full_name} ha sido actualizado a ${getRoleName(newRole)}`, 'success');
+      
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      console.error('Error al actualizar el rol:', errorMessage);
+      showToast(`No se pudo actualizar el rol: ${errorMessage}`, 'error');
     } finally {
       setIsUpdating(false);
       setUserToEdit(null);
@@ -199,12 +206,12 @@ export default function AdminUsersPage() {
   // Obtener nombre del rol
   const getRoleName = (role: string): string => {
     switch (role) {
-      case "client":
-        return "Cliente";
-      case "designer":
-        return "Diseñador";
-      case "project_manager":
-        return "Project Manager";
+      case 'client':
+        return 'Cliente';
+      case 'designer':
+        return 'Diseñador';
+      case 'project_manager':
+        return 'Project Manager';
       default:
         return role;
     }
@@ -213,24 +220,12 @@ export default function AdminUsersPage() {
   // Obtener color del badge según el rol
   const getRoleBadge = (role: string) => {
     switch (role) {
-      case "client":
-        return (
-          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-            Cliente
-          </Badge>
-        );
-      case "designer":
-        return (
-          <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
-            Diseñador
-          </Badge>
-        );
-      case "project_manager":
-        return (
-          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-            Project Manager
-          </Badge>
-        );
+      case 'client':
+        return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Cliente</Badge>;
+      case 'designer':
+        return <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">Diseñador</Badge>;
+      case 'project_manager':
+        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Project Manager</Badge>;
       default:
         return <Badge variant="outline">{role}</Badge>;
     }
@@ -239,16 +234,16 @@ export default function AdminUsersPage() {
   // Obtener iniciales para el avatar
   const getInitials = (name: string) => {
     return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
+      .split(' ')
+      .map(n => n[0])
+      .join('')
       .toUpperCase()
       .substring(0, 2);
   };
 
   // Formatear fecha
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("es");
+    return new Date(dateString).toLocaleDateString('es');
   };
 
   if (!profile) {
@@ -267,14 +262,18 @@ export default function AdminUsersPage() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Gestión de Usuarios</h1>
-          <p className="text-gray-500">Administra todos los usuarios de la plataforma</p>
+          <p className="text-gray-500">
+            Administra todos los usuarios de la plataforma
+          </p>
         </div>
       </div>
 
       <Card className="mb-6">
         <CardHeader>
           <CardTitle>Filtros</CardTitle>
-          <CardDescription>Busca y filtra usuarios</CardDescription>
+          <CardDescription>
+            Busca y filtra usuarios
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col md:flex-row gap-4">
@@ -286,7 +285,10 @@ export default function AdminUsersPage() {
               />
             </div>
             <div className="w-full md:w-48">
-              <Select value={roleFilter} onValueChange={setRoleFilter}>
+              <Select
+                value={roleFilter}
+                onValueChange={setRoleFilter}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Filtrar por rol" />
                 </SelectTrigger>
@@ -317,7 +319,11 @@ export default function AdminUsersPage() {
           <CardContent className="p-6">
             <div className="text-center py-4">
               <p className="text-red-500">Error al cargar usuarios: {error}</p>
-              <Button variant="outline" className="mt-4" onClick={() => window.location.reload()}>
+              <Button 
+                variant="outline" 
+                className="mt-4" 
+                onClick={() => window.location.reload()}
+              >
                 Reintentar
               </Button>
             </div>
@@ -360,12 +366,14 @@ export default function AdminUsersPage() {
                         </div>
                       </TableCell>
                       <TableCell>{user.email}</TableCell>
-                      <TableCell>{getRoleBadge(user.role)}</TableCell>
+                      <TableCell>
+                        {getRoleBadge(user.role)}
+                      </TableCell>
                       <TableCell>{user.projects_count}</TableCell>
                       <TableCell>{formatDate(user.created_at)}</TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          variant="outline"
+                        <Button 
+                          variant="outline" 
                           size="sm"
                           onClick={() => {
                             setUserToEdit(user);
@@ -385,8 +393,8 @@ export default function AdminUsersPage() {
       )}
 
       {/* Diálogo para cambiar rol de usuario */}
-      <Dialog
-        open={!!userToEdit}
+      <Dialog 
+        open={!!userToEdit} 
         onOpenChange={(open) => {
           if (!open) {
             setUserToEdit(null);
@@ -399,14 +407,16 @@ export default function AdminUsersPage() {
             <DialogTitle>Cambiar Rol de Usuario</DialogTitle>
             <DialogDescription>
               Estás cambiando el rol de <strong>{userToEdit?.full_name}</strong>.
-              <br />
-              <br />
-              El rol actual es <strong>{userToEdit ? getRoleName(userToEdit.role) : ""}</strong>.
+              <br /><br />
+              El rol actual es <strong>{userToEdit ? getRoleName(userToEdit.role) : ''}</strong>.
             </DialogDescription>
           </DialogHeader>
-
+          
           <div className="py-4">
-            <Select value={newRole || ""} onValueChange={(value) => setNewRole(value as UserRole)}>
+            <Select
+              value={newRole || ''}
+              onValueChange={(value) => setNewRole(value as UserRole)}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Seleccionar nuevo rol" />
               </SelectTrigger>
@@ -416,7 +426,7 @@ export default function AdminUsersPage() {
                 <SelectItem value="project_manager">Project Manager</SelectItem>
               </SelectContent>
             </Select>
-
+            
             <div className="mt-2 text-sm text-gray-500">
               <p>Ten en cuenta que:</p>
               <ul className="list-disc pl-5 mt-1">
@@ -426,7 +436,7 @@ export default function AdminUsersPage() {
               </ul>
             </div>
           </div>
-
+          
           <DialogFooter>
             <Button
               variant="outline"
@@ -443,7 +453,7 @@ export default function AdminUsersPage() {
               onClick={handleUpdateRole}
               disabled={isUpdating || newRole === userToEdit?.role || !newRole}
             >
-              {isUpdating ? "Actualizando..." : "Cambiar Rol"}
+              {isUpdating ? 'Actualizando...' : 'Cambiar Rol'}
             </Button>
           </DialogFooter>
         </DialogContent>
