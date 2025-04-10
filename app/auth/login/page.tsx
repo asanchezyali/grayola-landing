@@ -1,18 +1,19 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/app/providers/supabase-auth-provider';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/app/providers/supabase-auth-provider";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { signIn } = useAuth();
@@ -25,9 +26,11 @@ export default function LoginPage() {
 
     try {
       await signIn(email, password);
-      router.push('/dashboard');
-    } catch (error: any) {
-      setError(error.message || 'Failed to sign in. Please check your credentials.');
+      router.push("/dashboard");
+    } catch (error: Error | unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to sign in. Please check your credentials.";
+      console.error("Error message:", errorMessage);
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -70,10 +73,7 @@ export default function LoginPage() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password">Contraseña</Label>
-                  <Link 
-                    href="/auth/forgot-password"
-                    className="text-xs text-blue-600 hover:text-blue-800"
-                  >
+                  <Link href="/auth/forgot-password" className="text-xs text-blue-600 hover:text-blue-800">
                     ¿Olvidaste tu contraseña?
                   </Link>
                 </div>
@@ -86,22 +86,15 @@ export default function LoginPage() {
                   required
                 />
               </div>
-              <Button 
-                type="submit" 
-                className="w-full"
-                disabled={isLoading}
-              >
-                {isLoading ? 'Iniciando sesión...' : 'Iniciar sesión'}
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? "Iniciando sesión..." : "Iniciar sesión"}
               </Button>
             </form>
           </CardContent>
           <CardFooter className="flex justify-center">
             <p className="text-sm text-gray-600">
-              ¿No tienes una cuenta?{' '}
-              <Link 
-                href="/auth/register" 
-                className="text-blue-600 hover:text-blue-800"
-              >
+              ¿No tienes una cuenta?{" "}
+              <Link href="/auth/register" className="text-blue-600 hover:text-blue-800">
                 Regístrate
               </Link>
             </p>
