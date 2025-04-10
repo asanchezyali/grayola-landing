@@ -1,8 +1,8 @@
 // app/layout.tsx
 import './globals.css';
 import { Inter } from 'next/font/google';
-import { Toaster } from '@/components/ui/sonner';
 import { SupabaseAuthProvider } from './providers/supabase-auth-provider';
+import { ToastProvider } from './providers/toast-provider';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -20,8 +20,9 @@ export default function RootLayout({
     <html lang="es">
       <body className={inter.className}>
         <SupabaseAuthProvider>
-          {children}
-          <Toaster />
+          <ToastProvider>
+            {children}
+          </ToastProvider>
         </SupabaseAuthProvider>
       </body>
     </html>
