@@ -75,7 +75,6 @@ Esta plataforma web permite a Grayola, una startup de Design as a Service, gesti
 ```
 grayola-project-management/
 ├── app/
-│   ├── admin/            # Rutas del administrador
 │   ├── auth/             # Rutas de autenticación
 │   ├── components/       # Componentes reutilizables
 │   ├── dashboard/        # Dashboard del usuario
