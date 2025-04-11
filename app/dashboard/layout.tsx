@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "../providers/supabase-auth-provider";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -65,7 +65,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { name: "Usuarios", href: "/admin/users", forRoles: ["project_manager"] },
   ];
 
-  const filteredNavigation = navigation.filter((item) => item.forRoles.includes(profile.role));
+  const filteredNavigation = navigation.filter((item) => item.forRoles.includes(profile.role ?? "client"));
 
   const getInitials = (name: string) => {
     return name
@@ -120,7 +120,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
         <div className="p-4 border-t">
           <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-            {profile.role === "client" ? "Cliente" : profile.role === "designer" ? "Diseñador" : "Project Manager"}
+            {profile.role === "client" ? "Cliente" : profile.role === "designer" ? "Diseñador" : profile.role === "project_manager" ? "Project Manager" : "Usuario"}
           </div>
         </div>
       </div>
@@ -181,18 +181,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-8 w-8">
-                    {profile.avatar_url ? (
-                      <AvatarImage src={profile.avatar_url} alt={profile.full_name} />
-                    ) : (
-                      <AvatarFallback>{getInitials(profile.full_name)}</AvatarFallback>
-                    )}
+                    <AvatarFallback>{getInitials(profile.full_name ?? "Usuario")}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">{profile.full_name}</p>
+                    <p className="text-sm font-medium leading-none">{profile.full_name ?? "Usuario"}</p>
                     <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
                   </div>
                 </DropdownMenuLabel>
