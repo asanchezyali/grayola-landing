@@ -61,8 +61,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { name: "Dashboard", href: "/dashboard", forRoles: ["client", "designer", "project_manager"] },
     { name: "Mis Proyectos", href: "/dashboard/projects", forRoles: ["client", "designer", "project_manager"] },
     { name: "Nuevo Proyecto", href: "/dashboard/projects/new", forRoles: ["client"] },
-    { name: "Todos los Proyectos", href: "/admin/projects", forRoles: ["project_manager"] },
-    { name: "Usuarios", href: "/admin/users", forRoles: ["project_manager"] },
+    { name: "Todos los Proyectos", href: "/dashboard/projects", forRoles: ["project_manager"] },
+    { name: "Usuarios", href: "/dashboard/users", forRoles: ["project_manager"] },
   ];
 
   const filteredNavigation = navigation.filter((item) => item.forRoles.includes(profile.role ?? "client"));

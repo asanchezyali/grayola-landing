@@ -261,7 +261,7 @@ export default function AdminProjectsPage() {
                           <Link href={`/projects/${project.id}`}>Ver</Link>
                         </Button>
                         <Button variant="outline" size="sm" asChild>
-                          <Link href={`/admin/projects/${project.id}/edit`}>Editar</Link>
+                          <Link href={`/dashboard/projects/${project.id}/edit`}>Editar</Link>
                         </Button>
                         <Button variant="destructive" size="sm" onClick={() => setProjectToDelete(project)}>
                           Eliminar
