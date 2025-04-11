@@ -1,57 +1,10 @@
 // app/page.tsx
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/app/providers/supabase-auth-provider';
-import { Button } from '@/components/ui/button';
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export default function HomePage() {
-  const { profile, isLoading, session, user } = useAuth();
-  const [isRedirecting, setIsRedirecting] = useState(false);
-  const router = useRouter();
-
-  console.log('User:', user);
-  console.log('Profile:', profile);
-  console.log('Session:', session?.user?.email);
-  console.log('Loading:', isLoading);
-
-
-  useEffect(() => {
-    const checkStoredSession = () => {
-      try {
-        const storedSession = localStorage.getItem('supabase_session');
-        if (storedSession) {
-          console.log('Found stored session');
-        }
-      } catch (error) {
-        console.error('Error checking stored session:', error);
-      }
-    };
-    
-    checkStoredSession();
-  }, []);
-
-  useEffect(() => {
-    if (profile && !isLoading && !isRedirecting) {
-      console.log('Redirecting to dashboard - authenticated user detected');
-      setIsRedirecting(true);
-      router.push('/dashboard');
-    }
-  }, [profile, isLoading, router, isRedirecting]);
-
-  if (isLoading || (profile && !isRedirecting)) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-t-blue-500 border-b-blue-500 border-r-transparent border-l-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="mt-4 text-xl font-semibold">Cargando...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-col min-h-screen">
       <header className="sticky top-0 z-10 bg-white border-b">
@@ -106,7 +59,7 @@ export default function HomePage() {
       </section>
 
       {/* Features and other sections omitted for brevity */}
-      
+
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-12">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -120,16 +73,36 @@ export default function HomePage() {
             <div>
               <h3 className="text-lg font-semibold mb-4">Enlaces</h3>
               <ul className="space-y-2">
-                <li><Link href="/" className="text-gray-400 hover:text-white transition-colors">Inicio</Link></li>
-                <li><Link href="/auth/login" className="text-gray-400 hover:text-white transition-colors">Iniciar sesión</Link></li>
-                <li><Link href="/auth/register" className="text-gray-400 hover:text-white transition-colors">Registrarse</Link></li>
+                <li>
+                  <Link href="/" className="text-gray-400 hover:text-white transition-colors">
+                    Inicio
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/auth/login" className="text-gray-400 hover:text-white transition-colors">
+                    Iniciar sesión
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/auth/register" className="text-gray-400 hover:text-white transition-colors">
+                    Registrarse
+                  </Link>
+                </li>
               </ul>
             </div>
             <div>
               <h3 className="text-lg font-semibold mb-4">Legal</h3>
               <ul className="space-y-2">
-                <li><Link href="#" className="text-gray-400 hover:text-white transition-colors">Términos de servicio</Link></li>
-                <li><Link href="#" className="text-gray-400 hover:text-white transition-colors">Política de privacidad</Link></li>
+                <li>
+                  <Link href="#" className="text-gray-400 hover:text-white transition-colors">
+                    Términos de servicio
+                  </Link>
+                </li>
+                <li>
+                  <Link href="#" className="text-gray-400 hover:text-white transition-colors">
+                    Política de privacidad
+                  </Link>
+                </li>
               </ul>
             </div>
             <div>
