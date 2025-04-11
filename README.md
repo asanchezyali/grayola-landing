@@ -1,6 +1,6 @@
 # Grayola - Plataforma de Gestión de Proyectos de Diseño
 
-![Grayola Logo](https://via.placeholder.com/1200x300/5B21B6/FFFFFF?text=Grayola+Project+Management)
+![Grayola Logo](https://grayola.io/wp-content/uploads/2024/05/Grayola-Logo-SVG.svg)
 
 Esta plataforma web permite a Grayola, una startup de Design as a Service, gestionar eficientemente sus proyectos de diseño con una estructura de roles bien definida para clientes, diseñadores y project managers.
 
@@ -297,7 +297,11 @@ Para implementar la aplicación en producción:
 
 ## Capturas de Pantalla
 
-[Aquí se incluirían capturas de pantalla de la aplicación en funcionamiento]
+![image](https://github.com/user-attachments/assets/0f1c3b6e-5a32-4687-9def-8bc659fcf38a)
+
+![image](https://github.com/user-attachments/assets/6bc46892-b3ef-4995-acec-60c17ed11cfa)
+
+![image](https://github.com/user-attachments/assets/a5b89500-7a1b-46c7-b27c-826c2d086d96)
 
 ## Colaboradores
 
