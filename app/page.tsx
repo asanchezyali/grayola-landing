@@ -12,13 +12,12 @@ export default function HomePage() {
   const [isRedirecting, setIsRedirecting] = useState(false);
   const router = useRouter();
 
-  // Console logs for debugging
   console.log('User:', user);
   console.log('Profile:', profile);
-  console.log('Session:', session?.user?.email); // Only log email for privacy
+  console.log('Session:', session?.user?.email);
   console.log('Loading:', isLoading);
 
-  // Check for stored session on component mount
+
   useEffect(() => {
     const checkStoredSession = () => {
       try {
@@ -34,7 +33,6 @@ export default function HomePage() {
     checkStoredSession();
   }, []);
 
-  // Redirigir a dashboard si ya está autenticado
   useEffect(() => {
     if (profile && !isLoading && !isRedirecting) {
       console.log('Redirecting to dashboard - authenticated user detected');
@@ -43,7 +41,6 @@ export default function HomePage() {
     }
   }, [profile, isLoading, router, isRedirecting]);
 
-  // Show loading state when we know we're authenticated and about to redirect
   if (isLoading || (profile && !isRedirecting)) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -57,7 +54,6 @@ export default function HomePage() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      {/* Navbar */}
       <header className="sticky top-0 z-10 bg-white border-b">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
@@ -78,10 +74,7 @@ export default function HomePage() {
         </div>
       </header>
 
-      {/* Rest of your component remains the same */}
-      {/* Hero Section */}
       <section className="bg-gradient-to-b from-purple-50 to-white py-20">
-        {/* Content omitted for brevity */}
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
             <div>
