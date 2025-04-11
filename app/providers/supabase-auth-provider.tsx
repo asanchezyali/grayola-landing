@@ -195,6 +195,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
         console.log('Fetching profile after sign in for user:', data.user.id);
         const profileData = await fetchProfile(data.user.id);
         setProfile(profileData);
+        router.push('/dashboard');
       }
     } catch (err) {
       console.error('Sign in error:', err);
